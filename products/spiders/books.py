@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Iterator
 
 import scrapy
 from scrapy.http import Response
@@ -18,7 +18,7 @@ class BooksSpider(scrapy.Spider):
     allowed_domains = ["books.toscrape.com"]
     start_urls = ["https://books.toscrape.com/"]
 
-    def parse(self, response: Response, **kwargs) -> str:
+    def parse(self, response: Response, **kwargs) -> Iterator[Any]:
         for book in response.css(".product_pod"):
             book_detail_url = response.urljoin(book.css("h3 a::attr(href)").get())
             yield response.follow(book_detail_url, callback=self._parse_book)
@@ -28,7 +28,7 @@ class BooksSpider(scrapy.Spider):
             yield response.follow(next_page, callback=self.parse)
 
     @staticmethod
-    def _parse_book(response: Response) -> Dict[str, Any]:
+    def _parse_book(response: Response) -> Iterator[Dict[str, Any]]:
         yield {
             "title": response.css("h1::text").get(),
             "price": float(response.css("p.price_color::text").get().replace("£", "")),
